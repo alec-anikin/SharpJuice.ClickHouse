@@ -2,6 +2,7 @@
 
 	<PropertyGroup>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<PackageReadmeFile>..\..\README.md</PackageReadmeFile>
 	</PropertyGroup>
 
 	<ItemGroup>
