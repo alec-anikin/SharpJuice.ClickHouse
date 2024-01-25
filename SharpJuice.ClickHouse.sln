@@ -17,9 +17,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ci", "ci", "{DB19C4E8-67EA-
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{7BEB0A03-25BD-4B29-8496-8236790718F1}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SharpJuice.ClickHouse", "src\SharpJuice.Clickhouse\SharpJuice.ClickHouse.csproj", "{6AEB5377-5FF3-4CFC-94F9-FAD2B77E9180}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SharpJuice.ClickHouse", "src\SharpJuice.ClickHouse\SharpJuice.ClickHouse.csproj", "{6AEB5377-5FF3-4CFC-94F9-FAD2B77E9180}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SharpJuice.ClickHouse.Tests", "tests\SharpJuice.Clickhouse.Tests\SharpJuice.ClickHouse.Tests.csproj", "{1E6B040B-899B-499E-9E54-C45D0C4C9133}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SharpJuice.ClickHouse.Tests", "tests\SharpJuice.ClickHouse.Tests\SharpJuice.ClickHouse.Tests.csproj", "{1E6B040B-899B-499E-9E54-C45D0C4C9133}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "benchmarks", "benchmarks", "{27D8D4D0-259E-47FC-B761-53ED37AB870A}"
 EndProject

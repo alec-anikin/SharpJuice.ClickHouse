@@ -83,7 +83,7 @@
     {
         private readonly ITableWriter<Order> _tableWriter;
         
-        public PlacementStore(ITableWriterBuilder tableWriterBuilder)
+        public ClickHouseRepository(ITableWriterBuilder tableWriterBuilder)
         {
             _tableWriter = tableWriterBuilder
                 .For<Order>("table_name")
