@@ -17,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\SharpJuice.Clickhouse\SharpJuice.ClickHouse.csproj" />
+    <ProjectReference Include="..\..\src\SharpJuice.ClickhHouse\SharpJuice.ClickHouse.csproj" />
   </ItemGroup>
 
 </Project>
