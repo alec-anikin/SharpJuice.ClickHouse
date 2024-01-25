@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" Version="0.13.12" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\SharpJuice.Clickhouse\SharpJuice.ClickHouse.csproj" />
+    <ProjectReference Include="..\..\tests\SharpJuice.Clickhouse.Tests\SharpJuice.ClickHouse.Tests.csproj" />
+  </ItemGroup>
+    
+
+</Project>

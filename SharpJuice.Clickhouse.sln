@@ -1,0 +1,58 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.32014.148
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{25BFCA25-2ABE-4D7D-90F1-7A6F992D4A52}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ci", "ci", "{DB19C4E8-67EA-4428-AF9B-4AC85B4B69C7}"
+	ProjectSection(SolutionItems) = preProject
+		.gitignore = .gitignore
+		Directory.Build.props = Directory.Build.props
+		docker-compose.yml = docker-compose.yml
+		.github\workflows\dotnet-core.yml = .github\workflows\dotnet-core.yml
+		.github\workflows\nuget-publish.yml = .github\workflows\nuget-publish.yml
+		README.md = README.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{7BEB0A03-25BD-4B29-8496-8236790718F1}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SharpJuice.ClickHouse", "src\SharpJuice.Clickhouse\SharpJuice.ClickHouse.csproj", "{6AEB5377-5FF3-4CFC-94F9-FAD2B77E9180}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SharpJuice.ClickHouse.Tests", "tests\SharpJuice.Clickhouse.Tests\SharpJuice.ClickHouse.Tests.csproj", "{1E6B040B-899B-499E-9E54-C45D0C4C9133}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "benchmarks", "benchmarks", "{27D8D4D0-259E-47FC-B761-53ED37AB870A}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Benchmarks", "benchmark\Benchmarks\Benchmarks.csproj", "{F8920F0F-482E-416A-91CA-9321AC2EA790}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6AEB5377-5FF3-4CFC-94F9-FAD2B77E9180}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6AEB5377-5FF3-4CFC-94F9-FAD2B77E9180}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6AEB5377-5FF3-4CFC-94F9-FAD2B77E9180}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6AEB5377-5FF3-4CFC-94F9-FAD2B77E9180}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1E6B040B-899B-499E-9E54-C45D0C4C9133}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1E6B040B-899B-499E-9E54-C45D0C4C9133}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1E6B040B-899B-499E-9E54-C45D0C4C9133}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1E6B040B-899B-499E-9E54-C45D0C4C9133}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F8920F0F-482E-416A-91CA-9321AC2EA790}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F8920F0F-482E-416A-91CA-9321AC2EA790}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F8920F0F-482E-416A-91CA-9321AC2EA790}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F8920F0F-482E-416A-91CA-9321AC2EA790}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{6AEB5377-5FF3-4CFC-94F9-FAD2B77E9180} = {25BFCA25-2ABE-4D7D-90F1-7A6F992D4A52}
+		{1E6B040B-899B-499E-9E54-C45D0C4C9133} = {7BEB0A03-25BD-4B29-8496-8236790718F1}
+		{F8920F0F-482E-416A-91CA-9321AC2EA790} = {27D8D4D0-259E-47FC-B761-53ED37AB870A}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {E076382F-5E36-476C-8EE6-FE1DE2B38AF5}
+	EndGlobalSection
+EndGlobal
