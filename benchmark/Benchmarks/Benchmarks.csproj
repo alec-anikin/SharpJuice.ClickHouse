@@ -9,8 +9,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\SharpJuice.Clickhouse\SharpJuice.ClickHouse.csproj" />
-    <ProjectReference Include="..\..\tests\SharpJuice.Clickhouse.Tests\SharpJuice.ClickHouse.Tests.csproj" />
+    <ProjectReference Include="..\..\src\SharpJuice.ClickHouse\SharpJuice.ClickHouse.csproj" />
+    <ProjectReference Include="..\..\tests\SharpJuice.ClickHouse.Tests\SharpJuice.ClickHouse.Tests.csproj" />
   </ItemGroup>
     
 
