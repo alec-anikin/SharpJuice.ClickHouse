@@ -1,4 +1,3 @@
-using Octonica.ClickHouseClient;
 using System.Runtime.InteropServices;
 using SharpJuice.Clickhouse.TableSchema;
 
@@ -36,9 +35,10 @@ internal sealed class TableWriter<T> : ITableWriter<T>
         }
     }
 
-    public Task Insert(
-        IEnumerable<T> records,
-        CancellationToken token)
+    public Task Insert(T[] records, CancellationToken token = default) 
+        => Insert(new ReadOnlySpan<T>(records), token);
+
+    public Task Insert(IEnumerable<T> records, CancellationToken token = default)
     {
         return records switch
         {

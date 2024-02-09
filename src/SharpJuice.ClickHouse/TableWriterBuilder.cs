@@ -1,4 +1,3 @@
-using Octonica.ClickHouseClient;
 using SharpJuice.Clickhouse.TableSchema;
 
 namespace SharpJuice.Clickhouse;

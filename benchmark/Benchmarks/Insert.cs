@@ -4,7 +4,6 @@ using BenchmarkDotNet.Order;
 using Dapper;
 using SharpJuice.Clickhouse;
 using SharpJuice.Clickhouse.Tests.Infrastructure;
-using System.Threading;
 
 namespace Benchmarks;
 

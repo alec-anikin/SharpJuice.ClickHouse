@@ -42,6 +42,18 @@ public sealed class Tests : TestClickHouseStore
         written.Should().BeEquivalentTo(records, o => o.ComparingByValue<FlatObject>());
     }
 
+    [Fact]
+    public async Task WritingRecords_AsArray()
+    {
+        var records = _fixture.CreateMany<FlatObject>(357).ToArray();
+
+        await _writer.Insert(records, CancellationToken.None);
+
+        var written = await GetClickhouseObjects();
+
+        written.Should().BeEquivalentTo(records, o => o.ComparingByValue<FlatObject>());
+    }
+
     [Theory]
     [MemberData(nameof(GetEnumerables))]
     public async Task WritingRecords_AsEnumerable(IEnumerable<FlatObject> records)
