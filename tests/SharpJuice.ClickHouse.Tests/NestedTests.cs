@@ -1,18 +1,23 @@
 ﻿using System.Collections;
+using System.Collections.Concurrent;
 using AutoFixture;
 using Dapper;
 using FluentAssertions;
 using SharpJuice.Clickhouse.Tests.Infrastructure;
+using Xunit;
+using Xunit.Abstractions;
 
 namespace SharpJuice.Clickhouse.Tests;
 
 public sealed class NestedTests : TestClickHouseStore
 {
+    private readonly ITestOutputHelper _output;
     private readonly Fixture _fixture;
     private ITableWriter<TestObject> _writer;
 
-    public NestedTests()
+    public NestedTests(ITestOutputHelper output)
     {
+        _output = output;
         _fixture = new Fixture();
         _fixture.Inject(new DateOnly(2022, 9, 14));
 
@@ -118,6 +123,66 @@ public sealed class NestedTests : TestClickHouseStore
         written.Should().BeEquivalentTo(records, o => o.ComparingByValue<TestObject>());
     }
 
+    [Fact(Timeout = Int32.MaxValue, Skip = "Manual")]
+    public async Task Writing_Stress()
+    {
+        const int threads = 13;
+        _output.WriteLine("Create objects");
+        var records = CreateTestObjects(100000).ToArray();
+
+        _output.WriteLine("Objects created");
+
+        for (var i = 0; i < 20; i++)
+        {
+            var connection = CreateConnection();
+            await connection.ExecuteAsync("TRUNCATE TABLE test_table");
+            connection.Dispose();
+
+            var tasks = new List<Task>(threads);
+
+            _output.WriteLine("Start writing");
+            foreach (var chunk in records.Chunk(records.Length / threads))
+            {
+                tasks.Add(Task.Run(() => _writer.Insert(chunk)));
+            }
+
+            await Task.WhenAll(tasks);
+            _output.WriteLine("Writing completed");
+
+            var written = await GetClickhouseObjects();
+
+            written.SequenceEqual(records).Should().BeTrue();
+        }
+
+        IEnumerable<TestObject> CreateTestObjects(int count)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                yield return new TestObject(
+                    OrderId: i,
+                    CartId: _fixture.Create<int>(),
+                    TotalAmount: _fixture.Create<decimal>(),
+                    Date: _fixture.Create<DateOnly>(),
+                    Benefits: Enumerable.Range(0, Random.Shared.Next(0, 50)).Select(
+                        _ => new Benefit(
+                            Guid.NewGuid(), 
+                            Random.Shared.Next(0, Int32.MaxValue))).ToList(),
+                    Discounts: new ReadOnlyCollection<Discount>(
+                        Enumerable.Range(0, Random.Shared.Next(0, 50)).Select(
+                            _ => new Discount
+                            (Random.Shared.Next(0, Int32.MaxValue), 
+                                Guid.NewGuid().ToString(),
+                                new(Math.Round(Random.Shared.NextDouble(),6)))).ToArray()),
+                    Items: Enumerable.Range(0, Random.Shared.Next(0, 20)).Select(
+                        _ => new Item(
+                            Random.Shared.Next(0, Int32.MaxValue),
+                            Random.Shared.Next(0, Int32.MaxValue),
+                            Guid.NewGuid().ToString(),
+                            new(Math.Round(Random.Shared.NextDouble(), 6)))).ToArray());
+            }
+        }
+    }
+
     public static IEnumerable<object[]> GetEnumerables()
     {
         var fixture = new Fixture();
@@ -157,6 +222,7 @@ public sealed class NestedTests : TestClickHouseStore
             benefit.code as benefit_code,
             benefit.value as benefit_value
             FROM test_table
+            Order By order_id
             """);
 
         return CreateObjects(objects);

@@ -3,16 +3,19 @@ using AutoFixture;
 using Dapper;
 using FluentAssertions;
 using SharpJuice.Clickhouse.Tests.Infrastructure;
+using Xunit.Abstractions;
 
 namespace SharpJuice.Clickhouse.Tests;
 
 public sealed class JoinTests : TestClickHouseStore
 {
+    private readonly ITestOutputHelper _output;
     private readonly Fixture _fixture;
     private ITableWriter<Message> _writer;
 
-    public JoinTests()
+    public JoinTests(ITestOutputHelper output)
     {
+        _output = output;
         _fixture = new Fixture();
         _fixture.Inject(new DateOnly(2022, 9, 14));
 
@@ -86,6 +89,54 @@ public sealed class JoinTests : TestClickHouseStore
         written.Should().BeEquivalentTo(records);
     }
 
+    [Fact(Timeout = Int32.MaxValue, Skip = "Manual")]
+    public async Task Writing_Stress()
+    {
+        const int threads = 13;
+        _output.WriteLine("Create objects");
+        var records = CreateTestObjects(50000).ToArray();
+
+        _output.WriteLine("Objects created");
+
+        for (var i = 0; i < 20; i++)
+        {
+            var connection = CreateConnection();
+            await connection.ExecuteAsync("TRUNCATE TABLE test_table");
+            connection.Dispose();
+
+            var tasks = new List<Task>(threads);
+
+            _output.WriteLine("Start writing");
+            foreach (var chunk in records.Chunk(records.Length / threads))
+            {
+                tasks.Add(Task.Run(() => _writer.Insert(chunk)));
+            }
+
+            await Task.WhenAll(tasks);
+            _output.WriteLine("Writing completed");
+
+            var written = await GetClickhouseMessages();
+
+            written.SequenceEqual(records).Should().BeTrue();
+        }
+
+        IEnumerable<Message> CreateTestObjects(int count)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                yield return new Message(
+                    PartnerId: i,
+                    WarehouseId: _fixture.Create<int>(),
+                    Date: _fixture.Create<DateOnly>(),
+                    Items: Enumerable.Range(0, Random.Shared.Next(1, 50)).Select(
+                        _ => new Item(
+                            Random.Shared.Next(0, Int32.MaxValue),
+                            Random.Shared.Next(0, Int32.MaxValue),
+                            Guid.NewGuid().ToString())).ToArray());
+            }
+        }
+    }
+
     public static IEnumerable<object[]> GetEnumerables()
     {
         var fixture = new Fixture();
@@ -135,7 +186,7 @@ public sealed class JoinTests : TestClickHouseStore
                 item_id,
                 price,
                 date
-            FROM test_table;");
+            FROM test_table order by partner_id;");
 
         return CreateMessages(messages);
     }
@@ -171,7 +222,28 @@ public sealed class JoinTests : TestClickHouseStore
         long PartnerId,
         long WarehouseId,
         DateOnly Date,
-        Item[] Items);
+        Item[] Items)
+    {
+        public bool Equals(Message? other)
+        {
+            if (other == null)
+                return false;
+
+            if (PartnerId != other.PartnerId ||
+                WarehouseId != other.WarehouseId ||
+                Date != other.Date)
+                return false;
+
+            var items = new HashSet<Item>(Items);
+            if (!items.SetEquals(other.Items))
+                return false;
+
+            return true;
+        }
+
+        public override int GetHashCode()
+            => HashCode.Combine(PartnerId, WarehouseId, Date, Items.Length);
+    };
 
     public sealed record Item(
         int? CategoryId,
@@ -182,7 +254,7 @@ public sealed class JoinTests : TestClickHouseStore
     {
         public long partner_id { get; init; }
         public long warehouse_id { get; init; }
-        public short category_id { get; init; }
+        public int category_id { get; init; }
         public long item_id { get; init; }
         public string? price { get; init; }
         public DateOnly date { get; init; }

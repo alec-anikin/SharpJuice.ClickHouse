@@ -7,10 +7,10 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Nerdbank.Streams" Version="2.10.72" PrivateAssets="All" ExcludeAssets="analyzers" />
 		<PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" Version="8.0.0" />
+		<PackageReference Include="Microsoft.VisualStudio.Validation" Version="17.8.8" />
 		<PackageReference Include="Octonica.ClickHouseClient" Version="3.1.1" />
-		<None Include="..\..\README.md" Pack="true" PackagePath="\"/>
+		<None Include="..\..\README.md" Pack="true" PackagePath="\" />
 	</ItemGroup>
 
 </Project>
