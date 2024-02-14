@@ -54,6 +54,9 @@ internal sealed class TableWriter<T> : ITableWriter<T>
     {
         using var table = _tableBuilder.CreateTable(records);
 
+        if(table.RowCount == 0)
+            return;
+
         await Insert(table, token);
     }
 

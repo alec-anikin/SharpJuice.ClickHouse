@@ -65,6 +65,42 @@ public sealed class Tests : TestClickHouseStore
         written.Should().BeEquivalentTo(records, o => o.ComparingByValue<FlatObject>());
     }
 
+    [Fact]
+    public async Task WritingEmpty_AsSpan()
+    {
+        var records = Array.Empty<FlatObject>();
+
+        await _writer.Insert(records.AsSpan(), CancellationToken.None);
+
+        var written = await GetClickhouseObjects();
+
+        written.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task WritingEmpty_AsArray()
+    {
+        var records = Array.Empty<FlatObject>();
+
+        await _writer.Insert(records, CancellationToken.None);
+
+        var written = await GetClickhouseObjects();
+
+        written.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task WritingEmpty_AsEnumerable()
+    {
+        var records = Enumerable.Empty<FlatObject>();
+
+        await _writer.Insert(records, CancellationToken.None);
+
+        var written = await GetClickhouseObjects();
+
+        written.Should().BeEmpty();
+    }
+
     public static IEnumerable<object[]> GetEnumerables()
     {
         var fixture = new Fixture();
