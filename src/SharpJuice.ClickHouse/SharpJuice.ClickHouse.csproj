@@ -9,7 +9,7 @@
 	<ItemGroup>
 		<PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" Version="8.0.0" />
 		<PackageReference Include="Microsoft.VisualStudio.Validation" Version="17.8.8" />
-		<PackageReference Include="Octonica.ClickHouseClient" Version="3.1.1" />
+		<PackageReference Include="Octonica.ClickHouseClient" Version="3.1.2" />
 		<None Include="..\..\README.md" Pack="true" PackagePath="\" />
 	</ItemGroup>
 
