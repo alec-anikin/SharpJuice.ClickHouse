@@ -30,7 +30,7 @@
                 .AddColumn("order_id", a => a.OrderId)
                 .AddColumn("user_id", a => a.UserId)
                 .AddColumn("created_at", a => a.CreatedAt)                
-		    .Build();
+		.Build();
         }
 
         public async Task Add(IReadOnlyCollection<Order> orders, CancellationToken token)
