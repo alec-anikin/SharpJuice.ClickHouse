@@ -1,8 +1,8 @@
 <Project>
 	<PropertyGroup>
 		<TargetFrameworks>net6.0;net8.0</TargetFrameworks>
-		<VersionPrefix>1.0.6</VersionPrefix>
-		<Version>1.0.6</Version>
+		<VersionPrefix>1.0.7</VersionPrefix>
+		<Version>1.0.7</Version>
 		<LangVersion>latest</LangVersion>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 		<WarningsAsErrors />
@@ -15,7 +15,8 @@
 		<EmbedUntrackedSources>true</EmbedUntrackedSources>
 
 		<Authors>Alec Anikin</Authors>
-		<PackageTags>clickhouse;bulk;objects;writer</PackageTags>
+		<Description>Easily writing objects to ClickHouse using bulk insert and ArrayPool for high performance and low memory allocation.</Description>
+		<PackageTags>clickhouse;bulk;objects;writer;insert</PackageTags>
 		<PackageProjectUrl>https://github.com/alec-anikin/SharpJuice.Clickhouse</PackageProjectUrl>
 		<IncludeSymbols>true</IncludeSymbols>
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
