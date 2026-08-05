@@ -68,6 +68,11 @@ internal sealed class DriverTableSink : ITableSink
                 isCompressed: true,
                 cancellationToken);
         }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            // The caller cancelled, the schema is still valid — keep it cached
+            throw;
+        }
         catch
         {
             // Never cache a failed probe, and drop a possibly stale schema (e.g. a renamed
