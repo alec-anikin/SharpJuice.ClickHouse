@@ -6,6 +6,8 @@
 		<NoWarn>VSTHRD200</NoWarn>
 		<!-- ClickHouse.Driver 1.2.0 references Microsoft.Extensions.* 10.x for its net6.0 target -->
 		<SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
+		<Description>Writing objects to ClickHouse over HTTP: ClickHouse.Driver as transport, ClickHouse Native format on the wire. Keeps the columnar ArrayPool-based write path of SharpJuice.ClickHouse, so Array and Nested columns are written without per-value boxing.</Description>
+		<PackageTags>clickhouse;bulk;objects;writer;insert;http;native;clickhouse-driver</PackageTags>
 	</PropertyGroup>
 
 	<ItemGroup>

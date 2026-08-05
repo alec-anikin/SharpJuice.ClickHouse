@@ -40,6 +40,8 @@ public abstract class TestClickHouseStore : IDisposable
     {
         using var connection = _connectionFactory.Create();
 
-        connection.ExecuteAsync($"DROP DATABASE IF EXISTS {_databaseSettings.ConnectionSettings.Database}");
+        connection.ExecuteAsync($"DROP DATABASE IF EXISTS {_databaseSettings.ConnectionSettings.Database}")
+            .GetAwaiter()
+            .GetResult();
     }
 }

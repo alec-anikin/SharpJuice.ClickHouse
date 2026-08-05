@@ -77,9 +77,9 @@ internal static class NativeBlockWriter
         {
             var size = column.WriteNext(buffer);
 
-            // Nothing fit — grow and retry, same as Octonica's own ClickHouseBinaryProtocolWriter.WriteRaw.
+            // Grow and retry, same as Octonica's own ClickHouseBinaryProtocolWriter.WriteRaw.
             // Bytes > 0 with Elements == 0 is a valid result (headers/metadata): write it and continue.
-            if (size.Bytes == 0 && size.Elements == 0)
+            if (size is { Bytes: 0, Elements: 0 })
             {
                 Grow(ref buffer);
                 continue;

@@ -32,22 +32,15 @@ Only the registration differs — `For<T>()`, `AddColumn`, `AddNestedColumn`, `A
 ```csharp
     using SharpJuice.Clickhouse.Driver;
 
-    var settings = new ClickHouseClientSettings("Host=localhost;Port=8123;Username=default");
+    var settings = new ClickHouse.Driver.ADO.ClickHouseClientSettings("Host=localhost;Port=8123;Username=default");
 
     // the factory owns a ClickHouseClient, so let the container dispose it
     services.AddSingleton<IClickHouseConnectionFactory>(sp => new ClickHouseConnectionFactory(settings));
-    services.AddSingleton<ITableWriterBuilder, TableWriterBuilder>();
+    services.AddSingleton<SharpJuice.Clickhouse.ITableWriterBuilder, TableWriterBuilder>();
     services.AddSingleton<ClickHouseRepository>();
 ```
 
 For ClickHouse servers below 25.x set `JsonReadMode = JsonReadMode.None` and `JsonWriteMode = JsonWriteMode.None` in `ClickHouseClientSettings`.
-
-Both interfaces are named `IClickHouseConnectionFactory` and live in different namespaces, so an application can use both drivers at once — for example to migrate table by table:
-
-```csharp
-    services.AddKeyedSingleton<ITableWriterBuilder>("tcp",  (_, _) => new Clickhouse.TableWriterBuilder(octonicaFactory));
-    services.AddKeyedSingleton<ITableWriterBuilder>("http", (_, _) => new Clickhouse.Driver.TableWriterBuilder(driverFactory));
-```
 
 ## Flat object
 
