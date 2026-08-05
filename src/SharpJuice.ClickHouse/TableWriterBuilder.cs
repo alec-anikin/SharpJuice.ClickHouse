@@ -4,31 +4,36 @@ namespace SharpJuice.Clickhouse;
 
 public sealed class TableWriterBuilder : ITableWriterBuilder
 {
-    private readonly IClickHouseConnectionFactory _connectionFactory;
+    private readonly ITableSinkFactory _sinkFactory;
 
     public TableWriterBuilder(IClickHouseConnectionFactory connectionFactory)
+        : this(new OctonicaTableSinkFactory(connectionFactory))
     {
-        _connectionFactory = connectionFactory;
+    }
+
+    internal TableWriterBuilder(ITableSinkFactory sinkFactory)
+    {
+        _sinkFactory = sinkFactory;
     }
 
     public ITableWriterBuilder<TSource> For<TSource>(string tableName)
-        => new Builder<TSource>(tableName, _connectionFactory);
+        => new Builder<TSource>(tableName, _sinkFactory);
 
     private sealed class Builder<TSource> :
         ITableWriterBuilder<TSource>,
         INestedTableWriterBuilder<TSource>
     {
         private readonly string _tableName;
-        private readonly IClickHouseConnectionFactory _connectionFactory;
+        private readonly ITableSinkFactory _sinkFactory;
         private readonly List<IColumnDefinition<TSource>> _columnDefinitions = new();
 
-        public Builder(string tableName, IClickHouseConnectionFactory connectionFactory)
+        public Builder(string tableName, ITableSinkFactory sinkFactory)
         {
             if (string.IsNullOrWhiteSpace(tableName))
                 throw new ArgumentException("Table name must be specified", nameof(tableName));
 
             _tableName = tableName;
-            _connectionFactory = connectionFactory;
+            _sinkFactory = sinkFactory;
         }
 
         public ITableWriterBuilder<TSource> AddColumn<TColumn>(string name, Func<TSource, TColumn> getValue)
@@ -70,7 +75,7 @@ public sealed class TableWriterBuilder : ITableWriterBuilder
 
             return new JoinedBuilder<TSource, TItem>(
                 _tableName,
-                _connectionFactory,
+                _sinkFactory,
                 _columnDefinitions,
                 columns,
                 getItems);
@@ -81,14 +86,11 @@ public sealed class TableWriterBuilder : ITableWriterBuilder
             if (_columnDefinitions.Count == 0)
                 throw new InvalidOperationException("Column definitions collection is empty");
 
-            var columns = string.Join(", ", _columnDefinitions.SelectMany(x => x.GetNames()));
-
-            var insertCommand = $"insert into {_tableName}({columns}) values";
+            var columnNames = _columnDefinitions.SelectMany(x => x.GetNames()).ToArray();
 
             return new TableWriter<TSource>(
                 new TableBuilder<TSource>(_columnDefinitions),
-                insertCommand,
-                _connectionFactory);
+                _sinkFactory.Create(_tableName, columnNames));
         }
     }
 
@@ -96,20 +98,20 @@ public sealed class TableWriterBuilder : ITableWriterBuilder
         IJoinedTableWriterBuilder<TSource>
     {
         private readonly string _tableName;
-        private readonly IClickHouseConnectionFactory _connectionFactory;
+        private readonly ITableSinkFactory _sinkFactory;
         private readonly List<IColumnDefinition<TSource>> _columnDefinitions;
         private readonly Func<TSource, IReadOnlyCollection<TItem>> _getItems;
         private readonly List<IColumnDefinition<TItem>> _itemColumnDefinitions;
 
         public JoinedBuilder(
             string tableName,
-            IClickHouseConnectionFactory connectionFactory,
+            ITableSinkFactory sinkFactory,
             List<IColumnDefinition<TSource>> columnDefinitions,
             List<IColumnDefinition<TItem>> itemColumnDefinitions,
             Func<TSource, IReadOnlyCollection<TItem>> getItems)
         {
             _tableName = tableName;
-            _connectionFactory = connectionFactory;
+            _sinkFactory = sinkFactory;
             _columnDefinitions = columnDefinitions;
             _itemColumnDefinitions = itemColumnDefinitions;
             _getItems = getItems;
@@ -130,16 +132,12 @@ public sealed class TableWriterBuilder : ITableWriterBuilder
                 throw new InvalidOperationException("Nested item column definitions collection is empty");
 
             var columnNames = _columnDefinitions.SelectMany(x => x.GetNames())
-                .Concat(_itemColumnDefinitions.SelectMany(x => x.GetNames()));
-
-            var columns = string.Join(", ", columnNames);
-
-            var insertCommand = $"insert into {_tableName}({columns}) values";
+                .Concat(_itemColumnDefinitions.SelectMany(x => x.GetNames()))
+                .ToArray();
 
             return new TableWriter<TSource>(
                 new JoinedTableBuilder<TSource, TItem>(_columnDefinitions, _itemColumnDefinitions, _getItems),
-                insertCommand,
-                _connectionFactory);
+                _sinkFactory.Create(_tableName, columnNames));
         }
     }
 

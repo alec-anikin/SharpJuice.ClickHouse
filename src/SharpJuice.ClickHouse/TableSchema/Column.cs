@@ -1,5 +1,7 @@
 using System.Buffers;
 using System.Runtime.CompilerServices;
+using Octonica.ClickHouseClient.Protocol;
+using Octonica.ClickHouseClient.Types;
 
 namespace SharpJuice.Clickhouse.TableSchema;
 
@@ -45,6 +47,12 @@ internal sealed class Column<TRecord, TColumn> : IColumn<TRecord>
     public IEnumerable<KeyValuePair<string, object?>> GetValues()
     {
         yield return new(_name, new ArraySegment<TColumn>(_values, 0, _length));
+    }
+
+    public IEnumerable<IClickHouseColumnWriter> CreateWriters(Func<string, IClickHouseColumnTypeInfo> getTypeInfo)
+    {
+        yield return getTypeInfo(_name)
+            .CreateColumnWriter(_name, new ArraySegment<TColumn>(_values, 0, _length), null);
     }
 
     public void Dispose()

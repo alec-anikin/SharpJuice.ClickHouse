@@ -1,4 +1,6 @@
 using System.Runtime.InteropServices;
+using Octonica.ClickHouseClient.Protocol;
+using Octonica.ClickHouseClient.Types;
 
 namespace SharpJuice.Clickhouse.TableSchema;
 
@@ -89,6 +91,19 @@ internal sealed class NestedColumn<TRecord, TItem> : IColumn<TRecord>
 
         foreach (var column in _innerColumns)
             yield return new(prefix + column.Name, column.GetValues());
+    }
+
+    public IEnumerable<IClickHouseColumnWriter> CreateWriters(Func<string, IClickHouseColumnTypeInfo> getTypeInfo)
+    {
+        var prefix = string.IsNullOrWhiteSpace(_name)
+            ? string.Empty
+            : _name + ".";
+
+        foreach (var column in _innerColumns)
+        {
+            var name = prefix + column.Name;
+            yield return column.CreateWriter(name, getTypeInfo(name));
+        }
     }
 
     public void Dispose()

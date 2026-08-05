@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<NoWarn>VSTHRD200</NoWarn>
+		<!-- ClickHouse.Driver 1.2.0 references Microsoft.Extensions.* 10.x for its net6.0 target -->
+		<SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="ClickHouse.Driver" Version="1.2.0" />
+		<None Include="..\..\README.md" Pack="true" PackagePath="\" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\SharpJuice.ClickHouse\SharpJuice.ClickHouse.csproj" />
+	</ItemGroup>
+
+</Project>

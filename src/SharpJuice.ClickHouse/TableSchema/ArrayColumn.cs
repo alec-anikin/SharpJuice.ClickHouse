@@ -1,5 +1,7 @@
 using System.Buffers;
 using Nerdbank.Streams;
+using Octonica.ClickHouseClient.Protocol;
+using Octonica.ClickHouseClient.Types;
 
 namespace SharpJuice.Clickhouse.TableSchema;
 
@@ -53,7 +55,10 @@ internal sealed class ArrayColumn<TItem, TColumn> : IArrayColumn<TItem>
     }
 
     public object? GetValues() => _values.Segment;
-    
+
+    public IClickHouseColumnWriter CreateWriter(string columnName, IClickHouseColumnTypeInfo typeInfo)
+        => typeInfo.CreateColumnWriter(columnName, _values.Segment, null);
+
     public void Dispose()
     {
         _sequence.Dispose();

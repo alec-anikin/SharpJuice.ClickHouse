@@ -1,9 +1,13 @@
 ﻿using AutoFixture;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Order;
+using ClickHouse.Driver;
+using ClickHouse.Driver.ADO;
 using Dapper;
 using SharpJuice.Clickhouse;
 using SharpJuice.Clickhouse.Tests.Infrastructure;
+using ClickHouseConnectionFactory = SharpJuice.Clickhouse.ClickHouseConnectionFactory;
+using Driver = SharpJuice.Clickhouse.Driver;
 
 namespace Benchmarks;
 
@@ -11,10 +15,24 @@ namespace Benchmarks;
 [Orderer(SummaryOrderPolicy.FastestToSlowest)]
 public class Insert
 {
+    private static readonly string[] ColumnNames =
+    {
+        "order_id", "cart_id", "total_amount", "date",
+        "item.id", "item.quantity", "item.name", "item.price",
+        "discount.id", "discount.name", "discount.value",
+        "benefit.code", "benefit.value"
+    };
+
+    private static readonly InsertOptions InsertOptions = new() { UseSchemaCache = true };
+
     private ClickHouseDatabaseSettings _databaseSettings = null!;
     private ClickHouseConnectionFactory _connectionFactory = null!;
-    private ITableWriter<TestObject> _nestedWriter = null!;
-    private ITableWriter<TestObject> _plainWriter = null!;
+    private Driver.ClickHouseConnectionFactory _driverConnectionFactory = null!;
+    private ClickHouseClient _driverClient = null!;
+    private ITableWriter<TestObject> _octonicaNestedWriter = null!;
+    private ITableWriter<TestObject> _octonicaFlatWriter = null!;
+    private ITableWriter<TestObject> _driverNestedWriter = null!;
+    private ITableWriter<TestObject> _driverFlatWriter = null!;
     private TestObject _testObject = null!;
 
     [Params(100, 1000, 10000, 30000)]
@@ -29,40 +47,16 @@ public class Insert
 
         var builder = new TableWriterBuilder(_connectionFactory);
 
-        _nestedWriter = builder.For<TestObject>("bench_table")
-            .AddColumn("order_id", a => a.OrderId)
-            .AddColumn("cart_id", a => a.CartId)
-            .AddColumn("total_amount", a => a.TotalAmount)
-            .AddColumn("date", a => a.Date)
-            .AddNestedColumn("item", x => x.Items, c => c
-                .AddColumn("id", x => x.Id)
-                .AddColumn("quantity", x => x.Quantity)
-                .AddColumn("name", x => x.Name)
-                .AddColumn("price", x => x.Price))
-            .AddNestedColumn(x => x.Discounts, c => c
-                .AddColumn("discount.id", x => x.Id)
-                .AddColumn("discount.name", x => x.Name)
-                .AddColumn("discount.value", x => x.Value))
-            .AddNestedColumn("benefit", x => x.Benefits, c => c
-                .AddColumn("code", x => x.Code)
-                .AddColumn("value", x => x.Value))
-            .Build();
+        _octonicaNestedWriter = CreateNestedWriter(builder);
+        _octonicaFlatWriter = CreateFlatArraysWriter(builder);
 
-        _plainWriter = builder.For<TestObject>("bench_table")
-            .AddColumn("order_id", a => a.OrderId)
-            .AddColumn("cart_id", a => a.CartId)
-            .AddColumn("total_amount", a => a.TotalAmount)
-            .AddColumn("date", a => a.Date)
-            .AddColumn("item.id", x => x.Items.Select(x => x.Id).ToArray())
-            .AddColumn("item.quantity", x => x.Items.Select(x => x.Quantity).ToArray())
-            .AddColumn("item.name", x => x.Items.Select(x => x.Name).ToArray())
-            .AddColumn("item.price", x => x.Items.Select(x => x.Price).ToArray())
-            .AddColumn("discount.id", x => x.Discounts.Select(x => x.Id).ToArray())
-            .AddColumn("discount.name", x => x.Discounts.Select(x => x.Name).ToArray())
-            .AddColumn("discount.value", x => x.Discounts.Select(x => x.Value).ToArray())
-            .AddColumn("benefit.code", x => x.Benefits.Select(x => x.Code).ToArray())
-            .AddColumn("benefit.value", x => x.Benefits.Select(x => x.Value).ToArray())
-            .Build();
+        _driverConnectionFactory = new Driver.ClickHouseConnectionFactory(CreateClientSettings());
+        _driverClient = new ClickHouseClient(CreateClientSettings());
+
+        var driverBuilder = new Driver.TableWriterBuilder(_driverConnectionFactory);
+
+        _driverNestedWriter = CreateNestedWriter(driverBuilder);
+        _driverFlatWriter = CreateFlatArraysWriter(driverBuilder);
 
         await using var connection = _databaseSettings.CreateConnection(string.Empty);
 
@@ -82,26 +76,120 @@ public class Insert
     {
         using var connection = _connectionFactory.Create();
         connection.Execute($"DROP DATABASE IF EXISTS {_databaseSettings.ConnectionSettings.Database}");
+
+        _driverConnectionFactory.Dispose();
+        _driverClient.Dispose();
+    }
+
+    private static ITableWriter<TestObject> CreateNestedWriter(ITableWriterBuilder builder)
+        => builder.For<TestObject>("bench_table")
+            .AddColumn("order_id", a => a.OrderId)
+            .AddColumn("cart_id", a => a.CartId)
+            .AddColumn("total_amount", a => a.TotalAmount)
+            .AddColumn("date", a => a.Date)
+            .AddNestedColumn("item", x => x.Items, c => c
+                .AddColumn("id", x => x.Id)
+                .AddColumn("quantity", x => x.Quantity)
+                .AddColumn("name", x => x.Name)
+                .AddColumn("price", x => x.Price))
+            .AddNestedColumn(x => x.Discounts, c => c
+                .AddColumn("discount.id", x => x.Id)
+                .AddColumn("discount.name", x => x.Name)
+                .AddColumn("discount.value", x => x.Value))
+            .AddNestedColumn("benefit", x => x.Benefits, c => c
+                .AddColumn("code", x => x.Code)
+                .AddColumn("value", x => x.Value))
+            .Build();
+
+    private static ITableWriter<TestObject> CreateFlatArraysWriter(ITableWriterBuilder builder)
+        => builder.For<TestObject>("bench_table")
+            .AddColumn("order_id", a => a.OrderId)
+            .AddColumn("cart_id", a => a.CartId)
+            .AddColumn("total_amount", a => a.TotalAmount)
+            .AddColumn("date", a => a.Date)
+            .AddColumn("item.id", x => x.Items.Select(x => x.Id).ToArray())
+            .AddColumn("item.quantity", x => x.Items.Select(x => x.Quantity).ToArray())
+            .AddColumn("item.name", x => x.Items.Select(x => x.Name).ToArray())
+            .AddColumn("item.price", x => x.Items.Select(x => x.Price).ToArray())
+            .AddColumn("discount.id", x => x.Discounts.Select(x => x.Id).ToArray())
+            .AddColumn("discount.name", x => x.Discounts.Select(x => x.Name).ToArray())
+            .AddColumn("discount.value", x => x.Discounts.Select(x => x.Value).ToArray())
+            .AddColumn("benefit.code", x => x.Benefits.Select(x => x.Code).ToArray())
+            .AddColumn("benefit.value", x => x.Benefits.Select(x => x.Value).ToArray())
+            .Build();
+
+    private ClickHouseClientSettings CreateClientSettings()
+    {
+        var settings = _databaseSettings.ConnectionSettings;
+
+        var portString = Environment.GetEnvironmentVariable("CLICKHOUSE_TEST_SERVER_HTTP_PORT");
+        var port = portString != null ? ushort.Parse(portString) : (ushort)8123;
+
+        return new ClickHouseClientSettings(
+            $"Host={settings.Host};Port={port};Database={settings.Database};Username={settings.User};Password={settings.Password}")
+        {
+            JsonReadMode = JsonReadMode.None,
+            JsonWriteMode = JsonWriteMode.None
+        };
     }
 
     [Benchmark]
-    public Task FlatObject_Writer()
+    public Task Octonica_Writer_FlatArrays()
     {
         var records = Enumerable.Repeat(_testObject, ObjectsCount);
 
-        return _plainWriter.Insert(records, CancellationToken.None);
+        return _octonicaFlatWriter.Insert(records, CancellationToken.None);
     }
 
     [Benchmark]
-    public Task NestedObject_Writer()
+    public Task Octonica_Writer_Nested()
     {
         var records = Enumerable.Repeat(_testObject, ObjectsCount);
 
-        return _nestedWriter.Insert(records, CancellationToken.None);
+        return _octonicaNestedWriter.Insert(records, CancellationToken.None);
     }
 
     [Benchmark]
-    public async Task ClickhouseClient_ColumnWriter()
+    public Task Driver_ColumnWriter_FlatArrays()
+    {
+        var records = Enumerable.Repeat(_testObject, ObjectsCount);
+
+        return _driverFlatWriter.Insert(records, CancellationToken.None);
+    }
+
+    [Benchmark]
+    public Task Driver_ColumnWriter_Nested()
+    {
+        var records = Enumerable.Repeat(_testObject, ObjectsCount);
+
+        return _driverNestedWriter.Insert(records, CancellationToken.None);
+    }
+
+    [Benchmark]
+    public Task Driver_InsertBinary()
+    {
+        var rows = Enumerable.Repeat(_testObject, ObjectsCount).Select(r => new object[]
+        {
+            r.OrderId,
+            r.CartId,
+            r.TotalAmount,
+            r.Date,
+            r.Items.Select(i => i.Id).ToArray(),
+            r.Items.Select(i => i.Quantity).ToArray(),
+            r.Items.Select(i => i.Name).ToArray(),
+            r.Items.Select(i => i.Price).ToArray(),
+            r.Discounts.Select(i => i.Id).ToArray(),
+            r.Discounts.Select(i => i.Name).ToArray(),
+            r.Discounts.Select(i => i.Value).ToArray(),
+            r.Benefits.Select(i => i.Code).ToArray(),
+            r.Benefits.Select(i => i.Value).ToArray()
+        });
+
+        return _driverClient.InsertBinaryAsync("bench_table", ColumnNames, rows, InsertOptions, CancellationToken.None);
+    }
+
+    [Benchmark]
+    public async Task Octonica_ColumnWriter()
     {
         var records = Enumerable.Repeat(_testObject, ObjectsCount).ToArray();
 

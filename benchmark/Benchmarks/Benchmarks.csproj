@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\SharpJuice.ClickHouse\SharpJuice.ClickHouse.csproj" />
+    <ProjectReference Include="..\..\src\SharpJuice.ClickHouse.Driver\SharpJuice.ClickHouse.Driver.csproj" />
     <ProjectReference Include="..\..\tests\SharpJuice.ClickHouse.Tests\SharpJuice.ClickHouse.Tests.csproj" />
   </ItemGroup>
     
