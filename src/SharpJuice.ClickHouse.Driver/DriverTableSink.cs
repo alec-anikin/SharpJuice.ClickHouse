@@ -53,10 +53,6 @@ internal sealed class DriverTableSink : ITableSink
 
             await using var connection = _connectionFactory.Create();
 
-            // The callback writes straight into the HTTP request body (StreamCallbackContent),
-            // so the block is never materialized in memory. isCompressed: true only adds the
-            // Content-Encoding: gzip header — compressing is on us, hence the GZipStream:
-            // https://github.com/ClickHouse/clickhouse-cs/blob/main/ClickHouse.Driver/ClickHouseClient.cs (PostStreamAsync)
             using var response = await connection.PostStreamAsync(
                 _insertCommand,
                 async (stream, _) =>
@@ -70,14 +66,12 @@ internal sealed class DriverTableSink : ITableSink
         }
         catch
         {
-            // Never cache a failed probe, and drop a possibly stale schema (e.g. a renamed
-            // column after ALTER TABLE) — the next insert re-reads it
+            // Drop possibly stale schema
             Interlocked.CompareExchange(ref _columnTypes, CreateSchemaCache(), schemaCache);
             throw;
         }
     }
 
-    // Lazy<Task> so that concurrent inserts coalesce into a single schema probe
     private Lazy<Task<Dictionary<string, string>>> CreateSchemaCache()
         => new(ResolveSchema, LazyThreadSafetyMode.ExecutionAndPublication);
 
@@ -88,11 +82,7 @@ internal sealed class DriverTableSink : ITableSink
         await using var reader = await command.ExecuteReaderAsync();
 
         var columnTypes = new Dictionary<string, string>(reader.FieldCount, StringComparer.Ordinal);
-
-        // GetDataTypeName returns the canonical CH type string, e.g. "Decimal(18, 6)":
-        // https://github.com/ClickHouse/clickhouse-cs/blob/main/ClickHouse.Driver/ADO/Readers/ClickHouseDataReader.cs
-        // It goes both into the Native block header and into Octonica's GetTypeInfo to pick
-        // the encoder, so the two cannot diverge.
+        
         for (var i = 0; i < reader.FieldCount; i++)
             columnTypes[reader.GetName(i)] = reader.GetDataTypeName(i);
 
