@@ -20,7 +20,6 @@ internal sealed class DriverTableSink : ITableSink
     private readonly IClickHouseConnectionFactory _connectionFactory;
     private readonly string _tableName;
     private readonly string _insertCommand;
-    private readonly string _schemaQuery;
     private Lazy<Task<Dictionary<string, string>>> _columnTypes;
 
     public DriverTableSink(
@@ -33,10 +32,6 @@ internal sealed class DriverTableSink : ITableSink
 
         var columns = string.Join(", ", columnNames);
         _insertCommand = $"INSERT INTO {tableName} ({columns}) FORMAT Native";
-        // Zero rows, but the response still carries column names and CH types — the same
-        // probe the driver runs internally for its own inserts (it is internal there):
-        // https://github.com/ClickHouse/clickhouse-cs/blob/main/ClickHouse.Driver/Utility/SchemaResolver.cs
-        _schemaQuery = $"SELECT {columns} FROM {tableName} WHERE 1=0";
         _columnTypes = CreateSchemaCache();
     }
 
@@ -77,14 +72,17 @@ internal sealed class DriverTableSink : ITableSink
 
     private async Task<Dictionary<string, string>> ResolveSchema()
     {
+        var schemaQuery = $"DESCRIBE TABLE {_tableName}";
+
         await using var connection = _connectionFactory.Create();
-        await using var command = connection.CreateCommand(_schemaQuery);
+        await using var command = connection.CreateCommand(schemaQuery);
         await using var reader = await command.ExecuteReaderAsync();
 
-        var columnTypes = new Dictionary<string, string>(reader.FieldCount, StringComparer.Ordinal);
-        
-        for (var i = 0; i < reader.FieldCount; i++)
-            columnTypes[reader.GetName(i)] = reader.GetDataTypeName(i);
+        var columnTypes = new Dictionary<string, string>(StringComparer.Ordinal);
+
+        // https://clickhouse.com/docs/reference/statements/describe-table
+        while (await reader.ReadAsync())
+            columnTypes[reader.GetString(0)] = reader.GetString(1);
 
         return columnTypes;
     }

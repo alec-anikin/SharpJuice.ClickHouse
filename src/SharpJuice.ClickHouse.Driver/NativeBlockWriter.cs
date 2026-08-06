@@ -15,7 +15,7 @@ internal static class NativeBlockWriter
     public static void Write(Stream stream, IReadOnlyList<IClickHouseColumnWriter> columns, int rowCount)
     {
         using var writer = new BinaryWriter(stream, Encoding.UTF8, leaveOpen: true);
-
+        
         // HTTP inserts are parsed with server_revision = 0, so no BlockInfo and no
         // custom serialization flag precede the counts, unlike the native TCP protocol:
         // https://github.com/ClickHouse/ClickHouse/blob/master/src/Processors/Formats/Impl/NativeFormat.cpp
