@@ -6,6 +6,7 @@ namespace SharpJuice.Clickhouse.Driver;
 
 /// <summary>
 /// Writes a block in the ClickHouse Native format as expected over HTTP.
+/// Format overview: https://clickhouse.com/docs/interfaces/formats/Native
 /// </summary>
 internal static class NativeBlockWriter
 {
@@ -19,8 +20,6 @@ internal static class NativeBlockWriter
         // custom serialization flag precede the counts, unlike the native TCP protocol:
         // https://github.com/ClickHouse/ClickHouse/blob/master/src/Processors/Formats/Impl/NativeFormat.cpp
         // Write7BitEncodedInt is the same wire encoding as ClickHouse varuint.
-        // Columns count goes first, then rows - the source:
-        // https://github.com/ClickHouse/ClickHouse/blob/master/src/Formats/NativeReader.cpp
         writer.Write7BitEncodedInt(columns.Count);
         writer.Write7BitEncodedInt(rowCount);
 
