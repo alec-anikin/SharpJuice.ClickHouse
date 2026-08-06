@@ -3,16 +3,19 @@ using AutoFixture;
 using Dapper;
 using FluentAssertions;
 using SharpJuice.Clickhouse.Driver.Tests.Infrastructure;
+using Xunit.Abstractions;
 
 namespace SharpJuice.Clickhouse.Driver.Tests;
 
 public sealed class JoinTests : TestClickHouseStore
 {
+    private readonly ITestOutputHelper _output;
     private readonly Fixture _fixture;
     private ITableWriter<Message> _writer;
 
-    public JoinTests()
+    public JoinTests(ITestOutputHelper output)
     {
+        _output = output;
         _fixture = new Fixture();
         _fixture.Inject(new DateOnly(2022, 9, 14));
 
@@ -83,6 +86,54 @@ public sealed class JoinTests : TestClickHouseStore
         var written = await GetClickhouseMessages();
 
         written.Should().BeEquivalentTo(records);
+    }
+
+    [Fact(Timeout = Int32.MaxValue, Skip = "Manual")]
+    public async Task Writing_Stress()
+    {
+        const int threads = 13;
+        _output.WriteLine("Create objects");
+        var records = CreateTestObjects(50000).ToArray();
+
+        _output.WriteLine("Objects created");
+
+        for (var i = 0; i < 20; i++)
+        {
+            var connection = CreateConnection();
+            await connection.ExecuteAsync("TRUNCATE TABLE test_table");
+            connection.Dispose();
+
+            var tasks = new List<Task>(threads);
+
+            _output.WriteLine("Start writing");
+            foreach (var chunk in records.Chunk(records.Length / threads))
+            {
+                tasks.Add(Task.Run(() => _writer.Insert(chunk)));
+            }
+
+            await Task.WhenAll(tasks);
+            _output.WriteLine("Writing completed");
+
+            var written = await GetClickhouseMessages();
+
+            written.SequenceEqual(records).Should().BeTrue();
+        }
+
+        IEnumerable<Message> CreateTestObjects(int count)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                yield return new Message(
+                    PartnerId: i,
+                    WarehouseId: _fixture.Create<int>(),
+                    Date: _fixture.Create<DateOnly>(),
+                    Items: Enumerable.Range(0, Random.Shared.Next(1, 50)).Select(
+                        _ => new Item(
+                            Random.Shared.Next(0, Int32.MaxValue),
+                            Random.Shared.Next(0, Int32.MaxValue),
+                            Guid.NewGuid().ToString())).ToArray());
+            }
+        }
     }
 
     public static IEnumerable<object[]> GetEnumerables()
