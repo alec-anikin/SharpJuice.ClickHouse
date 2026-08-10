@@ -12,10 +12,14 @@ internal static class NativeBlockWriter
 {
     private const int InitialBufferSize = 64 * 1024;
 
-    public static void Write(Stream stream, IReadOnlyList<IClickHouseColumnWriter> columns, int rowCount)
+    public static async Task WriteAsync(
+        Stream stream,
+        IReadOnlyList<IClickHouseColumnWriter> columns,
+        int rowCount,
+        CancellationToken cancellationToken)
     {
-        using var writer = new BinaryWriter(stream, Encoding.UTF8, leaveOpen: true);
-        
+        await using var writer = new BinaryWriter(stream, Encoding.UTF8, leaveOpen: true);
+
         // HTTP inserts are parsed with server_revision = 0, so no BlockInfo and no
         // custom serialization flag precede the counts, unlike the native TCP protocol:
         // https://github.com/ClickHouse/ClickHouse/blob/master/src/Processors/Formats/Impl/NativeFormat.cpp
@@ -36,8 +40,8 @@ internal static class NativeBlockWriter
                 if (rowCount == 0)
                     continue;
 
-                WritePrefix(writer, column, ref buffer);
-                WriteData(writer, column, rowCount, ref buffer);
+                buffer = await WritePrefixAsync(stream, column, buffer, cancellationToken);
+                buffer = await WriteDataAsync(stream, column, rowCount, buffer, cancellationToken);
             }
         }
         finally
@@ -48,8 +52,11 @@ internal static class NativeBlockWriter
 
     // WritePrefix/WriteNext contract (SequenceSize.Empty = buffer too small, retry with a bigger one):
     // https://github.com/Octonica/ClickHouseClient/blob/master/src/Octonica.ClickHouseClient/Protocol/IClickHouseColumnWriter.cs
-
-    private static void WritePrefix(BinaryWriter writer, IClickHouseColumnWriter column, ref byte[] buffer)
+    private static async Task<byte[]> WritePrefixAsync(
+        Stream stream,
+        IClickHouseColumnWriter column,
+        byte[] buffer,
+        CancellationToken cancellationToken)
     {
         while (true)
         {
@@ -58,19 +65,24 @@ internal static class NativeBlockWriter
             // The prefix counts as a single element, so Elements is either 0 or 1
             if (size.Elements == 1)
             {
-                writer.Write(buffer, 0, size.Bytes);
-                return;
+                await stream.WriteAsync(buffer.AsMemory(0, size.Bytes), cancellationToken);
+                return buffer;
             }
 
             if (size.Elements != 0)
                 throw new InvalidOperationException(
                     $"Column writer returned an unexpected number of prefixes: {size.Elements}.");
 
-            Grow(ref buffer);
+            buffer = Grow(buffer);
         }
     }
 
-    private static void WriteData(BinaryWriter writer, IClickHouseColumnWriter column, int rowCount, ref byte[] buffer)
+    private static async Task<byte[]> WriteDataAsync(
+        Stream stream,
+        IClickHouseColumnWriter column,
+        int rowCount,
+        byte[] buffer,
+        CancellationToken cancellationToken)
     {
         while (rowCount > 0)
         {
@@ -80,19 +92,21 @@ internal static class NativeBlockWriter
             // Bytes > 0 with Elements == 0 is a valid result (headers/metadata): write it and continue.
             if (size is { Bytes: 0, Elements: 0 })
             {
-                Grow(ref buffer);
+                buffer = Grow(buffer);
                 continue;
             }
 
-            writer.Write(buffer, 0, size.Bytes);
+            await stream.WriteAsync(buffer.AsMemory(0, size.Bytes), cancellationToken);
             rowCount -= size.Elements;
         }
+
+        return buffer;
     }
 
-    private static void Grow(ref byte[] buffer)
+    private static byte[] Grow(byte[] buffer)
     {
         var newBuffer = ArrayPool<byte>.Shared.Rent(buffer.Length * 2);
         ArrayPool<byte>.Shared.Return(buffer);
-        buffer = newBuffer;
+        return newBuffer;
     }
 }

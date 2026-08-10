@@ -50,11 +50,11 @@ internal sealed class DriverTableSink : ITableSink
 
             using var response = await connection.PostStreamAsync(
                 _insertCommand,
-                async (stream, _) =>
+                async (stream, ct) =>
                 {
                     // leaveOpen: the request stream is owned by the HttpContent
                     await using var gzip = new GZipStream(stream, CompressionLevel.Fastest, leaveOpen: true);
-                    NativeBlockWriter.Write(gzip, writers, table.RowCount);
+                    await NativeBlockWriter.WriteAsync(gzip, writers, table.RowCount, ct);
                 },
                 isCompressed: true,
                 cancellationToken);
