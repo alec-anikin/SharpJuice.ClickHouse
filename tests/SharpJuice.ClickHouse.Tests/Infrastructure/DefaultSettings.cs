@@ -6,7 +6,7 @@ public static class DefaultSettings
 
     public static ushort ClickHouseServerPort { get; } = 9000;
 
-    public static string ClickHouseUser { get; } = "default";
+    public static string ClickHouseUser { get; } = "user";
 
     public static string ClickHousePassword { get; } = string.Empty;
 }
