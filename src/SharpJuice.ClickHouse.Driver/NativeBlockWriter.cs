@@ -27,86 +27,89 @@ internal static class NativeBlockWriter
         writer.Write7BitEncodedInt(columns.Count);
         writer.Write7BitEncodedInt(rowCount);
 
-        var buffer = ArrayPool<byte>.Shared.Rent(InitialBufferSize);
-        try
-        {
-            foreach (var column in columns)
-            {
-                // BinaryWriter.Write(string) = varuint byte length + UTF-8, exactly the CH String encoding
-                writer.Write(column.ColumnName);
-                writer.Write(column.ColumnType);
+        using var buffer = new GrowingBuffer(InitialBufferSize);
 
-                // NativeReader reads column data only when rows > 0
-                if (rowCount == 0)
-                    continue;
-
-                buffer = await WritePrefixAsync(stream, column, buffer, cancellationToken);
-                buffer = await WriteDataAsync(stream, column, rowCount, buffer, cancellationToken);
-            }
-        }
-        finally
+        foreach (var column in columns)
         {
-            ArrayPool<byte>.Shared.Return(buffer);
+            // BinaryWriter.Write(string) = varuint byte length + UTF-8, exactly the CH String encoding
+            writer.Write(column.ColumnName);
+            writer.Write(column.ColumnType);
+
+            // NativeReader reads column data only when rows > 0
+            if (rowCount == 0)
+                continue;
+
+            await WritePrefixAsync(stream, column, buffer, cancellationToken);
+            await WriteDataAsync(stream, column, rowCount, buffer, cancellationToken);
         }
     }
 
     // WritePrefix/WriteNext contract (SequenceSize.Empty = buffer too small, retry with a bigger one):
     // https://github.com/Octonica/ClickHouseClient/blob/master/src/Octonica.ClickHouseClient/Protocol/IClickHouseColumnWriter.cs
-    private static async Task<byte[]> WritePrefixAsync(
+    private static async Task WritePrefixAsync(
         Stream stream,
         IClickHouseColumnWriter column,
-        byte[] buffer,
+        GrowingBuffer buffer,
         CancellationToken cancellationToken)
     {
         while (true)
         {
-            var size = column.WritePrefix(buffer);
+            var size = column.WritePrefix(buffer.Buffer);
 
             // The prefix counts as a single element, so Elements is either 0 or 1
             if (size.Elements == 1)
             {
-                await stream.WriteAsync(buffer.AsMemory(0, size.Bytes), cancellationToken);
-                return buffer;
+                await stream.WriteAsync(buffer.AsMemory(size.Bytes), cancellationToken);
+                return;
             }
 
             if (size.Elements != 0)
                 throw new InvalidOperationException(
                     $"Column writer returned an unexpected number of prefixes: {size.Elements}.");
 
-            buffer = Grow(buffer);
+            buffer.Grow();
         }
     }
 
-    private static async Task<byte[]> WriteDataAsync(
+    private static async Task WriteDataAsync(
         Stream stream,
         IClickHouseColumnWriter column,
         int rowCount,
-        byte[] buffer,
+        GrowingBuffer buffer,
         CancellationToken cancellationToken)
     {
         while (rowCount > 0)
         {
-            var size = column.WriteNext(buffer);
+            var size = column.WriteNext(buffer.Buffer);
 
             // Grow and retry, same as Octonica's own ClickHouseBinaryProtocolWriter.WriteRaw.
             // Bytes > 0 with Elements == 0 is a valid result (headers/metadata): write it and continue.
             if (size is { Bytes: 0, Elements: 0 })
             {
-                buffer = Grow(buffer);
+                buffer.Grow();
                 continue;
             }
 
-            await stream.WriteAsync(buffer.AsMemory(0, size.Bytes), cancellationToken);
+            await stream.WriteAsync(buffer.AsMemory(size.Bytes), cancellationToken);
             rowCount -= size.Elements;
         }
-
-        return buffer;
     }
-
-    private static byte[] Grow(byte[] buffer)
+    
+    private sealed class GrowingBuffer(int initialSize) : IDisposable
     {
-        var newBuffer = ArrayPool<byte>.Shared.Rent(buffer.Length * 2);
-        ArrayPool<byte>.Shared.Return(buffer);
-        return newBuffer;
+        private byte[] _buffer = ArrayPool<byte>.Shared.Rent(initialSize);
+
+        public Span<byte> Buffer => _buffer;
+
+        public ReadOnlyMemory<byte> AsMemory(int length) => _buffer.AsMemory(0, length);
+
+        public void Grow()
+        {
+            var grown = ArrayPool<byte>.Shared.Rent(_buffer.Length * 2);
+            ArrayPool<byte>.Shared.Return(_buffer);
+            _buffer = grown;
+        }
+
+        public void Dispose() => ArrayPool<byte>.Shared.Return(_buffer);
     }
 }
