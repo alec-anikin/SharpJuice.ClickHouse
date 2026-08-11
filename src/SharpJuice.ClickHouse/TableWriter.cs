@@ -6,17 +6,12 @@ namespace SharpJuice.Clickhouse;
 internal sealed class TableWriter<T> : ITableWriter<T>
 {
     private readonly ITableBuilder<T> _tableBuilder;
-    private readonly IClickHouseConnectionFactory _connectionFactory;
-    private readonly string _insertCommand;
+    private readonly ITableSink _sink;
 
-    public TableWriter(
-        ITableBuilder<T> tableBuilder,
-        string insertCommand,
-        IClickHouseConnectionFactory connectionFactory)
+    public TableWriter(ITableBuilder<T> tableBuilder, ITableSink sink)
     {
         _tableBuilder = tableBuilder;
-        _insertCommand = insertCommand;
-        _connectionFactory = connectionFactory;
+        _sink = sink;
     }
 
     public Task Insert(ReadOnlySpan<T> records, CancellationToken cancellationToken = default)
@@ -30,12 +25,12 @@ internal sealed class TableWriter<T> : ITableWriter<T>
         {
             using (table)
             {
-                await Insert(table, token);
+                await _sink.Write(table, token);
             }
         }
     }
 
-    public Task Insert(T[] records, CancellationToken token = default) 
+    public Task Insert(T[] records, CancellationToken token = default)
         => Insert(new ReadOnlySpan<T>(records), token);
 
     public Task Insert(IEnumerable<T> records, CancellationToken token = default)
@@ -57,18 +52,6 @@ internal sealed class TableWriter<T> : ITableWriter<T>
         if(table.RowCount == 0)
             return;
 
-        await Insert(table, token);
-    }
-
-    private async Task Insert(ITable table, CancellationToken cancellationToken)
-    {
-        var columns = new Dictionary<string, object?>(table.Columns.SelectMany(c => c.GetValues()));
-
-        await using var connection = _connectionFactory.Create();
-        await connection.OpenAsync(cancellationToken);
-
-        await using var writer = await connection.CreateColumnWriterAsync(_insertCommand, cancellationToken);
-
-        await writer.WriteTableAsync(columns, table.RowCount, cancellationToken);
+        await _sink.Write(table, token);
     }
 }
