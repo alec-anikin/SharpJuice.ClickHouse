@@ -1,6 +1,7 @@
 using Dapper;
 using FluentAssertions;
 using Octonica.ClickHouseClient;
+using SharpJuice.Clickhouse.Octonica;
 
 namespace SharpJuice.Clickhouse.Tests.Infrastructure;
 

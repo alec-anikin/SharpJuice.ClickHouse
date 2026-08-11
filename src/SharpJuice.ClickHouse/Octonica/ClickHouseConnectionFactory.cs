@@ -1,6 +1,6 @@
 using Octonica.ClickHouseClient;
 
-namespace SharpJuice.Clickhouse;
+namespace SharpJuice.Clickhouse.Octonica;
 
 public sealed class ClickHouseConnectionFactory : IClickHouseConnectionFactory
 {

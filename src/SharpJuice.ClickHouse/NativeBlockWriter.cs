@@ -10,8 +10,6 @@ namespace SharpJuice.Clickhouse.Driver;
 /// </summary>
 internal static class NativeBlockWriter
 {
-    private const int InitialBufferSize = 64 * 1024;
-
     public static async Task WriteAsync(
         Stream stream,
         IReadOnlyList<IClickHouseColumnWriter> columns,
@@ -27,7 +25,7 @@ internal static class NativeBlockWriter
         writer.Write7BitEncodedInt(columns.Count);
         writer.Write7BitEncodedInt(rowCount);
 
-        using var buffer = new GrowingBuffer(InitialBufferSize);
+        using var buffer = new GrowingBuffer();
 
         foreach (var column in columns)
         {
@@ -95,9 +93,11 @@ internal static class NativeBlockWriter
         }
     }
     
-    private sealed class GrowingBuffer(int initialSize) : IDisposable
+    private sealed class GrowingBuffer() : IDisposable
     {
-        private byte[] _buffer = ArrayPool<byte>.Shared.Rent(initialSize);
+        private const int InitialBufferSize = 64 * 1024;
+
+        private byte[] _buffer = ArrayPool<byte>.Shared.Rent(InitialBufferSize);
 
         public Span<byte> Buffer => _buffer;
 
@@ -110,6 +110,10 @@ internal static class NativeBlockWriter
             _buffer = grown;
         }
 
-        public void Dispose() => ArrayPool<byte>.Shared.Return(_buffer);
+        public void Dispose()
+        {
+            ArrayPool<byte>.Shared.Return(_buffer);
+            _buffer = null!;
+        }
     }
 }

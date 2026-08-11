@@ -2,8 +2,8 @@ using ClickHouse.Driver;
 using ClickHouse.Driver.ADO;
 using Dapper;
 using FluentAssertions;
-using Octonica.ClickHouseClient;
 using SharpJuice.Clickhouse.Tests.Infrastructure;
+using ClickHouseConnectionFactory = SharpJuice.ClickHouse.Driver.ClickHouseConnectionFactory;
 
 namespace SharpJuice.Clickhouse.Driver.Tests.Infrastructure;
 
@@ -14,7 +14,7 @@ public abstract class TestClickHouseStore : IDisposable
 
     private readonly ClickHouseDatabaseSettings _databaseSettings;
 
-    private readonly Clickhouse.ClickHouseConnectionFactory _readConnectionFactory;
+    private readonly Clickhouse.Octonica.ClickHouseConnectionFactory _readConnectionFactory;
 
     private readonly ClickHouseConnectionFactory _writeConnectionFactory;
 
@@ -27,7 +27,7 @@ public abstract class TestClickHouseStore : IDisposable
     {
         var configuration = new ClickHouseConfiguration();
         _databaseSettings = configuration.CreateDatabase();
-        _readConnectionFactory = new Clickhouse.ClickHouseConnectionFactory(_databaseSettings.ConnectionSettings);
+        _readConnectionFactory = new Clickhouse.Octonica.ClickHouseConnectionFactory(_databaseSettings.ConnectionSettings);
         _writeConnectionFactory = new ClickHouseConnectionFactory(CreateClientSettings());
     }
 
@@ -42,7 +42,7 @@ public abstract class TestClickHouseStore : IDisposable
     protected IClickHouseConnectionFactory GetConnectionFactory()
         => _writeConnectionFactory;
 
-    protected Octonica.ClickHouseClient.ClickHouseConnection CreateConnection()
+    protected global::Octonica.ClickHouseClient.ClickHouseConnection CreateConnection()
         => _readConnectionFactory.Create();
 
     public void Dispose()

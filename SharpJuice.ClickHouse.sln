@@ -1,9 +1,12 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.0.32014.148
+# Visual Studio Version 18
+VisualStudioVersion = 18.8.12023.21 stable
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{25BFCA25-2ABE-4D7D-90F1-7A6F992D4A52}"
+	ProjectSection(SolutionItems) = preProject
+		src\SharpJuice.ClickHouse.Driver\NativeBlockWriter.cs = src\SharpJuice.ClickHouse.Driver\NativeBlockWriter.cs
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ci", "ci", "{DB19C4E8-67EA-4428-AF9B-4AC85B4B69C7}"
 	ProjectSection(SolutionItems) = preProject
@@ -24,8 +27,6 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "benchmarks", "benchmarks", "{27D8D4D0-259E-47FC-B761-53ED37AB870A}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Benchmarks", "benchmark\Benchmarks\Benchmarks.csproj", "{F8920F0F-482E-416A-91CA-9321AC2EA790}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpJuice.ClickHouse.Driver", "src\SharpJuice.ClickHouse.Driver\SharpJuice.ClickHouse.Driver.csproj", "{264EA45B-9D20-4E3E-8703-A570F555E567}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpJuice.ClickHouse.Driver.Tests", "tests\SharpJuice.ClickHouse.Driver.Tests\SharpJuice.ClickHouse.Driver.Tests.csproj", "{60A3ABF0-A3E8-4F49-80D9-6E83BE81059F}"
 EndProject
@@ -75,18 +76,6 @@ Global
 		{F8920F0F-482E-416A-91CA-9321AC2EA790}.Release|x64.Build.0 = Release|Any CPU
 		{F8920F0F-482E-416A-91CA-9321AC2EA790}.Release|x86.ActiveCfg = Release|Any CPU
 		{F8920F0F-482E-416A-91CA-9321AC2EA790}.Release|x86.Build.0 = Release|Any CPU
-		{264EA45B-9D20-4E3E-8703-A570F555E567}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{264EA45B-9D20-4E3E-8703-A570F555E567}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{264EA45B-9D20-4E3E-8703-A570F555E567}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{264EA45B-9D20-4E3E-8703-A570F555E567}.Debug|x64.Build.0 = Debug|Any CPU
-		{264EA45B-9D20-4E3E-8703-A570F555E567}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{264EA45B-9D20-4E3E-8703-A570F555E567}.Debug|x86.Build.0 = Debug|Any CPU
-		{264EA45B-9D20-4E3E-8703-A570F555E567}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{264EA45B-9D20-4E3E-8703-A570F555E567}.Release|Any CPU.Build.0 = Release|Any CPU
-		{264EA45B-9D20-4E3E-8703-A570F555E567}.Release|x64.ActiveCfg = Release|Any CPU
-		{264EA45B-9D20-4E3E-8703-A570F555E567}.Release|x64.Build.0 = Release|Any CPU
-		{264EA45B-9D20-4E3E-8703-A570F555E567}.Release|x86.ActiveCfg = Release|Any CPU
-		{264EA45B-9D20-4E3E-8703-A570F555E567}.Release|x86.Build.0 = Release|Any CPU
 		{60A3ABF0-A3E8-4F49-80D9-6E83BE81059F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{60A3ABF0-A3E8-4F49-80D9-6E83BE81059F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{60A3ABF0-A3E8-4F49-80D9-6E83BE81059F}.Debug|x64.ActiveCfg = Debug|Any CPU
@@ -107,7 +96,6 @@ Global
 		{6AEB5377-5FF3-4CFC-94F9-FAD2B77E9180} = {25BFCA25-2ABE-4D7D-90F1-7A6F992D4A52}
 		{1E6B040B-899B-499E-9E54-C45D0C4C9133} = {7BEB0A03-25BD-4B29-8496-8236790718F1}
 		{F8920F0F-482E-416A-91CA-9321AC2EA790} = {27D8D4D0-259E-47FC-B761-53ED37AB870A}
-		{264EA45B-9D20-4E3E-8703-A570F555E567} = {25BFCA25-2ABE-4D7D-90F1-7A6F992D4A52}
 		{60A3ABF0-A3E8-4F49-80D9-6E83BE81059F} = {7BEB0A03-25BD-4B29-8496-8236790718F1}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution

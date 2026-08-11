@@ -1,3 +1,5 @@
+using SharpJuice.ClickHouse.Driver;
+using SharpJuice.ClickHouse.Octonica;
 using SharpJuice.Clickhouse.TableSchema;
 
 namespace SharpJuice.Clickhouse;
@@ -6,7 +8,12 @@ public sealed class TableWriterBuilder : ITableWriterBuilder
 {
     private readonly ITableSinkFactory _sinkFactory;
 
-    public TableWriterBuilder(IClickHouseConnectionFactory connectionFactory)
+    public TableWriterBuilder(SharpJuice.Clickhouse.Driver.IClickHouseConnectionFactory connectionFactory)
+        : this(new DriverTableSinkFactory(connectionFactory))
+    {
+    }
+
+    public TableWriterBuilder(SharpJuice.Clickhouse.Octonica.IClickHouseConnectionFactory connectionFactory)
         : this(new OctonicaTableSinkFactory(connectionFactory))
     {
     }

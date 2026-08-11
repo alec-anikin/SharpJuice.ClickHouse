@@ -2,7 +2,7 @@
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Order;
 using Dapper;
-using SharpJuice.Clickhouse;
+using SharpJuice.Clickhouse.Octonica;
 using SharpJuice.Clickhouse.Tests.Infrastructure;
 
 namespace Benchmarks;

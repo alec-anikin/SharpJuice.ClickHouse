@@ -1,7 +1,8 @@
 using ClickHouse.Driver;
 using ClickHouse.Driver.ADO;
+using SharpJuice.Clickhouse.Driver;
 
-namespace SharpJuice.Clickhouse.Driver;
+namespace SharpJuice.ClickHouse.Driver;
 
 public sealed class ClickHouseConnectionFactory : IClickHouseConnectionFactory, IDisposable
 {

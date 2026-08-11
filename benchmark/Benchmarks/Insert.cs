@@ -6,8 +6,7 @@ using ClickHouse.Driver.ADO;
 using Dapper;
 using SharpJuice.Clickhouse;
 using SharpJuice.Clickhouse.Tests.Infrastructure;
-using ClickHouseConnectionFactory = SharpJuice.Clickhouse.ClickHouseConnectionFactory;
-using Driver = SharpJuice.Clickhouse.Driver;
+using ClickHouseConnectionFactory = SharpJuice.Clickhouse.Octonica.ClickHouseConnectionFactory;
 
 namespace Benchmarks;
 
@@ -27,7 +26,7 @@ public class Insert
 
     private ClickHouseDatabaseSettings _databaseSettings = null!;
     private ClickHouseConnectionFactory _connectionFactory = null!;
-    private Driver.ClickHouseConnectionFactory _driverConnectionFactory = null!;
+    private SharpJuice.ClickHouse.Driver.ClickHouseConnectionFactory _driverConnectionFactory = null!;
     private ClickHouseClient _driverClient = null!;
     private ITableWriter<TestObject> _octonicaNestedWriter = null!;
     private ITableWriter<TestObject> _octonicaFlatWriter = null!;
@@ -50,10 +49,10 @@ public class Insert
         _octonicaNestedWriter = CreateNestedWriter(builder);
         _octonicaFlatWriter = CreateFlatArraysWriter(builder);
 
-        _driverConnectionFactory = new Driver.ClickHouseConnectionFactory(CreateClientSettings());
+        _driverConnectionFactory = new SharpJuice.ClickHouse.Driver.ClickHouseConnectionFactory(CreateClientSettings());
         _driverClient = new ClickHouseClient(CreateClientSettings());
 
-        var driverBuilder = new Driver.TableWriterBuilder(_driverConnectionFactory);
+        var driverBuilder = new TableWriterBuilder(_driverConnectionFactory);
 
         _driverNestedWriter = CreateNestedWriter(driverBuilder);
         _driverFlatWriter = CreateFlatArraysWriter(driverBuilder);
