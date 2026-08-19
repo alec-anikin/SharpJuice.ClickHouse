@@ -4,9 +4,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 18.8.12023.21 stable
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{25BFCA25-2ABE-4D7D-90F1-7A6F992D4A52}"
-	ProjectSection(SolutionItems) = preProject
-		src\SharpJuice.ClickHouse.Driver\NativeBlockWriter.cs = src\SharpJuice.ClickHouse.Driver\NativeBlockWriter.cs
-	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ci", "ci", "{DB19C4E8-67EA-4428-AF9B-4AC85B4B69C7}"
 	ProjectSection(SolutionItems) = preProject

@@ -1,8 +1,6 @@
-using SharpJuice.Clickhouse;
-using SharpJuice.Clickhouse.Octonica;
 using SharpJuice.Clickhouse.TableSchema;
 
-namespace SharpJuice.ClickHouse.Octonica;
+namespace SharpJuice.Clickhouse.Octonica;
 
 internal sealed class OctonicaTableSinkFactory : ITableSinkFactory
 {

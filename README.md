@@ -10,17 +10,16 @@ Works over either ClickHouse driver — see Registration.
 
 ## Registration
 
-There are two packages, one per driver:
 
-| Package | Driver | Transport |
-|---|---|---|
-| `SharpJuice.ClickHouse` | [Octonica.ClickHouseClient](https://github.com/Octonica/ClickHouseClient) | native TCP, port 9000 |
-| `SharpJuice.ClickHouse.Driver` | [ClickHouse.Driver](https://github.com/ClickHouse/clickhouse-cs) | HTTP, port 8123 |
+| Namespace                        | Driver | Transport |
+|----------------------------------|---|---|
+| `SharpJuice.Clickhouse.Octonica` | [Octonica.ClickHouseClient](https://github.com/Octonica/ClickHouseClient) | native TCP, port 9000 |
+| `SharpJuice.Clickhouse.Driver`   | [ClickHouse.Driver](https://github.com/ClickHouse/clickhouse-cs) | HTTP, port 8123 |
 
-Only the registration differs — `For<T>()`, `AddColumn`, `AddNestedColumn`, `ArrayJoin` and `ITableWriter<T>` are the same types from `SharpJuice.ClickHouse`.
+Only the registration differs — `For<T>()`, `AddColumn`, `AddNestedColumn`, `ArrayJoin` and `ITableWriter<T>` are the same types from `SharpJuice.Clickhouse`.
 
 ```csharp
-    using SharpJuice.Clickhouse;
+    using SharpJuice.Clickhouse.Octonica;
 
     ClickHouseConnectionSettings connectionSettings = ...;
 
@@ -182,4 +181,4 @@ Columns: `Nested` — via `AddNestedColumn`, `flat arrays` — array columns bui
 
 
 
-Thanks to [@deniskuzmin](https://github.com/deniskuzmin) and [@LegaNoga](https://github.com/LegaNoga)
+Thanks to [@deniskuzmin](https://github.com/deniskuzmin), [@LegaNoga](https://github.com/LegaNoga) and [@pavelrubanov](https://github.com/pavelrubanov)

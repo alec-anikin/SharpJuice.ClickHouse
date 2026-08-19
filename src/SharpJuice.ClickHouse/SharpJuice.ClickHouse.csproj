@@ -12,9 +12,4 @@
 		<PackageReference Include="ClickHouse.Driver" Version="1.2.0" />
 		<None Include="..\..\README.md" Pack="true" PackagePath="\" />
 	</ItemGroup>
-
-	<ItemGroup>
-		<InternalsVisibleTo Include="SharpJuice.ClickHouse.Driver" />
-	</ItemGroup>
-
 </Project>
