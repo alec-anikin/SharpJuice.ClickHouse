@@ -26,7 +26,7 @@ public class Insert
 
     private ClickHouseDatabaseSettings _databaseSettings = null!;
     private ClickHouseConnectionFactory _connectionFactory = null!;
-    private SharpJuice.ClickHouse.Driver.ClickHouseConnectionFactory _driverConnectionFactory = null!;
+    private SharpJuice.Clickhouse.Driver.ClickHouseConnectionFactory _driverConnectionFactory = null!;
     private ClickHouseClient _driverClient = null!;
     private ITableWriter<TestObject> _octonicaNestedWriter = null!;
     private ITableWriter<TestObject> _octonicaFlatWriter = null!;
@@ -49,7 +49,7 @@ public class Insert
         _octonicaNestedWriter = CreateNestedWriter(builder);
         _octonicaFlatWriter = CreateFlatArraysWriter(builder);
 
-        _driverConnectionFactory = new SharpJuice.ClickHouse.Driver.ClickHouseConnectionFactory(CreateClientSettings());
+        _driverConnectionFactory = new SharpJuice.Clickhouse.Driver.ClickHouseConnectionFactory(CreateClientSettings());
         _driverClient = new ClickHouseClient(CreateClientSettings());
 
         var driverBuilder = new TableWriterBuilder(_driverConnectionFactory);

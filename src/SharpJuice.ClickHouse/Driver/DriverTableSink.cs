@@ -1,10 +1,8 @@
 using System.IO.Compression;
 using Octonica.ClickHouseClient.Types;
-using SharpJuice.Clickhouse;
-using SharpJuice.Clickhouse.Driver;
 using SharpJuice.Clickhouse.TableSchema;
 
-namespace SharpJuice.ClickHouse.Driver;
+namespace SharpJuice.Clickhouse.Driver;
 
 internal sealed class DriverTableSinkFactory : ITableSinkFactory
 {

@@ -3,7 +3,6 @@ using ClickHouse.Driver.ADO;
 using Dapper;
 using FluentAssertions;
 using SharpJuice.Clickhouse.Tests.Infrastructure;
-using ClickHouseConnectionFactory = SharpJuice.ClickHouse.Driver.ClickHouseConnectionFactory;
 
 namespace SharpJuice.Clickhouse.Driver.Tests.Infrastructure;
 
